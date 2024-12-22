@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("your-secure-secret-key") // Replace with a secure key
+var jwtKey string
 
 // Claims struct for JWT
 type Claims struct {
@@ -66,6 +67,17 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+
+	jwtKey = os.Getenv("HCS_JWT_SECRET_KEY")
+
+	if jwtKey == "" {
+		fmt.Println("Error: HCS_JWT_SECRET_KEY is not set")
+		return
+	}
+	print("------\n")
+	print("Secret_KEY", os.Getenv("HCS_JWT_SECRET_KEY"), "\n")
+	print("------\n")
+
 	server := gin.Default()
 
 	// Login route for generating tokens
