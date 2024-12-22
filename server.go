@@ -1,42 +1,31 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", homeHandler)
-	mux.HandleFunc("/about", aboutHandler)
-	mux.HandleFunc("/submit", postHandler)
 
-	fmt.Println("Server running on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		fmt.Println("Error starting server:", err)
-	}
-}
+	server := gin.Default()
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	fmt.Fprintf(w, "Welcome to the Home Page!")
-}
+	server.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	fmt.Fprintf(w, "This is the About Page.")
-}
+	server.POST("/submit", func(c *gin.Context) {
+		c.String(200, "received submission")
+	})
 
-func postHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	fmt.Fprintf(w, "POST request received!")
+	server.GET("/", func(c *gin.Context) {
+		c.String(200, "This the main page")
+	})
+
+	server.NoRoute(func(c *gin.Context) {
+		c.String(404, "404 Not Found: The page you are looking for does not exist.")
+	})
+	server.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
