@@ -27,7 +27,7 @@ func validateCredentials(username string, pass string) bool {
 
 // GenerateToken generates a new JWT token for a user
 func GenerateToken(username string) (string, error) {
-	expirationTime := time.Now().Add(15 * time.Minute)
+	expirationTime := time.Now().Add(72 * time.Hour)
 	claims := &Claims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -109,7 +109,18 @@ func main() {
 	// Check token validity
 	server.GET("/check-token", TokenAuthMiddleware(), func(c *gin.Context) {
 		username := c.GetString("username")
-		c.JSON(http.StatusOK, gin.H{"message": "Token is valid", "username": username})
+		// Issue a new token with an extended expiration time
+		newToken, err := GenerateToken(username) // New expiration time (e.g., 30 minutes)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Token is valid",
+			"new_token": newToken,
+			"username":  username,
+		})
 	})
 
 	// Protected route
