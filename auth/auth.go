@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,18 +12,20 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
 )
 
-var JwtKey string
+var JwtKey []byte
 
 func LoadJwtKey() {
-	JwtKey = os.Getenv("HCS_JWT_SECRET_KEY")
+	JwtKey = []byte(os.Getenv("HCS_JWT_SECRET_KEY"))
 
-	if JwtKey == "" {
+	print("\n------\n")
+
+	if bytes.Equal(JwtKey, []byte{}) {
 		fmt.Println("Error: HCS_JWT_SECRET_KEY is not set")
-		return
+		print("------\n")
+		os.Exit(1) // Exit with a non-zero status (indicates an error)
 	}
-	print("------\n")
-	print("Secret_KEY", os.Getenv("HCS_JWT_SECRET_KEY"), "\n")
-	print("------\n")
+	print("Secret_KEY: ", os.Getenv("HCS_JWT_SECRET_KEY"), "\n")
+	print("------\n\n")
 }
 
 // ValidateCredentials validates username and password
@@ -50,8 +53,9 @@ func CheckLogin() gin.HandlerFunc {
 		}
 
 		token, err := GenerateToken(credentials.Username)
+		print(token)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token", "message": err.Error()})
 			return
 		}
 
