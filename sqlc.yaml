@@ -5,5 +5,3 @@ packages:
     queries: "./db/queries"        # Directory containing your SQL query files
     schema: "./db/schema"          # Directory containing your SQL schema files
     engine: "postgresql"           # Database engine
-
-.

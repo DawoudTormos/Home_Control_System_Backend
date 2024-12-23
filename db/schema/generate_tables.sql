@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS public.switches_schedule
 CREATE TABLE IF NOT EXISTS public.users
 (
     user_id serial NOT NULL,
-    name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    username character varying(100) COLLATE pg_catalog."default" NOT NULL,
     email character varying(150) COLLATE pg_catalog."default" NOT NULL,
     hashed_password text COLLATE pg_catalog."default" NOT NULL,
     salt text COLLATE pg_catalog."default" NOT NULL,
