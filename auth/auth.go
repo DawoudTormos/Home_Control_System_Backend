@@ -2,11 +2,17 @@ package auth
 
 import (
 	"bytes"
+	//"crypto/sha256"
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/DawoudTormos/Home_Control_System_Backend/db"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
@@ -30,12 +36,48 @@ func LoadJwtKey() {
 
 // ValidateCredentials validates username and password
 // Implement this function to connect to PostgreSQL
+func validateCredentials(c *gin.Context, dbConn *sql.DB, username, password string) bool {
+
+	ctx := c.Request.Context()
+
+	queries := db.New(dbConn)
+
+	// Fetch the salt and hashed password for the user
+	creds, err := queries.GetUserCredentials(ctx, username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Username not found")
+		} else {
+			log.Println("Database query error:", err)
+		}
+		return false
+	}
+
+	// Hash the salted password
+
+	/*hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	log.Println(string(hash)) */
+
+	err = bcrypt.CompareHashAndPassword([]byte(creds.HashedPassword), []byte(password))
+	//saltedHash := hex.EncodeToString(hash[:])
+	//println(saltedHash)
+
+	if err != nil {
+		log.Println("Invalid password")
+		log.Println(" message: ", err.Error())
+		return false
+	}
+
+	return true
+}
+
+/*
 func validateCredentials(username string, pass string) bool {
 	// Placeholder logic; replace with actual database query
 	return username == "admin" && pass == "password"
-}
+}*/
 
-func CheckLogin() gin.HandlerFunc {
+func CheckLogin(dbConn *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var credentials struct {
 			Username string `json:"username"`
@@ -47,13 +89,12 @@ func CheckLogin() gin.HandlerFunc {
 			return
 		}
 
-		if !validateCredentials(credentials.Username, credentials.Password) {
+		if !validateCredentials(c, dbConn, credentials.Username, credentials.Password) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
 		token, err := GenerateToken(credentials.Username)
-		print(token)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token", "message": err.Error()})
 			return

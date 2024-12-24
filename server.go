@@ -2,7 +2,9 @@ package main
 
 import (
 	//"auth"
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/DawoudTormos/Home_Control_System_Backend/auth"
@@ -11,12 +13,19 @@ import (
 
 func main() {
 
+	connStr := "postgres://postgres:admin@localhost:5432/HCS?sslmode=disable"
+	dbConn, err := sql.Open("pgx", connStr)
+	if err != nil {
+		log.Fatal("Unable to connect to database:", err)
+	}
+	defer dbConn.Close()
+
 	auth.LoadJwtKey()
 
 	server := gin.Default()
 
 	// Login route for generating tokens
-	server.POST("/login", auth.CheckLogin())
+	server.POST("/login", auth.CheckLogin(dbConn))
 
 	// Check token validity
 	server.GET("/check-token", auth.TokenAuthMiddleware(), auth.NewToken())
