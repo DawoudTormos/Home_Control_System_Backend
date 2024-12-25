@@ -27,6 +27,9 @@ func main() {
 	// Login route for generating tokens
 	server.POST("/login", auth.CheckLogin(dbConn))
 
+	// Sign Up route
+	server.POST("/signup", auth.SignUp(dbConn))
+
 	// Check token validity
 	server.GET("/check-token", auth.TokenAuthMiddleware(), auth.NewToken())
 

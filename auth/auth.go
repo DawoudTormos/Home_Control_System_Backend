@@ -104,6 +104,107 @@ func CheckLogin(dbConn *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func SignUp(dbConn *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var credentials struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+			Email    string `json:"email"`
+		}
+
+		if err := c.ShouldBindJSON(&credentials); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		if len(credentials.Email) >= 150 || len(credentials.Username) >= 100 || len(credentials.Password) >= 72 {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "One of the entered inputs is iggere than allowed value",
+				"errorCode": "01",
+			})
+			return
+		}
+
+		//Hashing the password with bycrypt
+		hashVal, err := bcrypt.GenerateFromPassword([]byte(credentials.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "error Creating a new account",
+				"errorCode": "0",
+			})
+			log.Println("eror while hashing.\n message: ", err.Error())
+			return
+		}
+
+		ctx := c.Request.Context()
+
+		queries := db.New(dbConn)
+
+		usernameUsed, err := queries.CheckUsernameExists(ctx, credentials.Username)
+		if usernameUsed {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "Username used already!",
+				"errorCode": "1",
+			})
+			return
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "error Creating a new account",
+				"errorCode": "11",
+			})
+			return
+
+		}
+
+		emailUsed, err := queries.CheckEmailExists(ctx, credentials.Email)
+		if emailUsed {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "Email used already!",
+				"errorCode": "2",
+			})
+			return
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "error Creating a new account",
+				"errorCode": "21",
+			})
+			return
+
+		}
+
+		_, err = queries.AddUser(ctx, db.AddUserParams{
+			Username:       credentials.Username,
+			Email:          credentials.Email,
+			HashedPassword: string(hashVal),
+		},
+		)
+		if err != nil {
+			println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "error creating an account",
+				"errorCode": "3",
+			})
+			return
+		}
+
+		token, err := GenerateToken(credentials.Username)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error":     "error returning a token",
+				"errorCode": "4",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "account created",
+			"token":    token,
+			"username": credentials.Username,
+		})
+
+	}
+}
+
 // GenerateToken generates a new JWT token for a user
 func GenerateToken(username string) (string, error) {
 
