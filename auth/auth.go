@@ -90,7 +90,7 @@ func CheckLogin(dbConn *sql.DB) gin.HandlerFunc {
 		}
 
 		if !validateCredentials(c, dbConn, credentials.Username, credentials.Password) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			c.JSON(http.StatusOK, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
