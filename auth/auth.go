@@ -119,7 +119,7 @@ func SignUp(dbConn *sql.DB) gin.HandlerFunc {
 
 		if len(credentials.Email) >= 150 || len(credentials.Username) >= 100 || len(credentials.Password) >= 72 {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"Error":     "One of the entered inputs is iggere than allowed value",
+				"Error":     "One of the entered inputs is biggere than the allowed value",
 				"errorCode": "01",
 			})
 			return
