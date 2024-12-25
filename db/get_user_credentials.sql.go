@@ -10,19 +10,19 @@ import (
 )
 
 const getUserCredentials = `-- name: GetUserCredentials :one
-SELECT salt, hashed_password
+SELECT username, hashed_password
 FROM users
 WHERE username = $1
 `
 
 type GetUserCredentialsRow struct {
-	Salt           string
+	Username       string
 	HashedPassword string
 }
 
 func (q *Queries) GetUserCredentials(ctx context.Context, username string) (GetUserCredentialsRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserCredentials, username)
 	var i GetUserCredentialsRow
-	err := row.Scan(&i.Salt, &i.HashedPassword)
+	err := row.Scan(&i.Username, &i.HashedPassword)
 	return i, err
 }

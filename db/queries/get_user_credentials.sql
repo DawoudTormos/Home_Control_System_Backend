@@ -1,4 +1,4 @@
 -- name: GetUserCredentials :one
-SELECT salt, hashed_password
+SELECT username, hashed_password
 FROM users
 WHERE username = $1;
