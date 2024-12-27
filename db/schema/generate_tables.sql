@@ -42,10 +42,13 @@ CREATE TABLE IF NOT EXISTS public.camera_snaps
 
 CREATE TABLE IF NOT EXISTS public.cameras
 (
-    camera_id serial NOT NULL,
+    id integer NOT NULL DEFAULT nextval('cameras_camera_id_seq'::regclass),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     room_id integer NOT NULL,
-    CONSTRAINT cameras_pkey PRIMARY KEY (camera_id)
+    value character varying COLLATE pg_catalog."default" NOT NULL,
+    color bigint NOT NULL,
+    index integer NOT NULL,
+    CONSTRAINT cameras_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.general_command_logs
@@ -67,10 +70,10 @@ CREATE TABLE IF NOT EXISTS public.general_commands
 
 CREATE TABLE IF NOT EXISTS public.rooms
 (
-    room_id serial NOT NULL,
+    id integer NOT NULL DEFAULT nextval('rooms_room_id_seq'::regclass),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     user_id integer NOT NULL,
-    CONSTRAINT rooms_pkey PRIMARY KEY (room_id)
+    CONSTRAINT rooms_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.sensor_command_logs
@@ -110,12 +113,15 @@ CREATE TABLE IF NOT EXISTS public.sensor_types
 
 CREATE TABLE IF NOT EXISTS public.sensors
 (
-    sensor_id serial NOT NULL,
+    id integer NOT NULL DEFAULT nextval('sensors_sensor_id_seq'::regclass),
     type character varying(50) COLLATE pg_catalog."default" NOT NULL,
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     room_id integer NOT NULL,
-    type_id integer,
-    CONSTRAINT sensors_pkey PRIMARY KEY (sensor_id)
+    type_id integer NOT NULL,
+    value integer NOT NULL,
+    index integer NOT NULL,
+    color bigint NOT NULL,
+    CONSTRAINT sensors_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.switch_command_logs
@@ -147,10 +153,17 @@ CREATE TABLE IF NOT EXISTS public.switch_logs
 
 CREATE TABLE IF NOT EXISTS public.switches
 (
-    switch_id serial NOT NULL,
+    id integer NOT NULL DEFAULT nextval('switches_switch_id_seq'::regclass),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     room_id integer NOT NULL,
-    CONSTRAINT switches_pkey PRIMARY KEY (switch_id)
+    switch_state boolean NOT NULL,
+    color bigint NOT NULL,
+    icon_code integer NOT NULL,
+    icon_family character varying COLLATE pg_catalog."default" NOT NULL,
+    index integer NOT NULL,
+    type integer NOT NULL,
+    value smallint NOT NULL,
+    CONSTRAINT switches_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.switches_schedule
@@ -166,27 +179,26 @@ CREATE TABLE IF NOT EXISTS public.switches_schedule
 
 CREATE TABLE IF NOT EXISTS public.users
 (
-    user_id serial NOT NULL,
+    id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
     username character varying(100) COLLATE pg_catalog."default" NOT NULL,
     email character varying(150) COLLATE pg_catalog."default" NOT NULL,
     hashed_password text COLLATE pg_catalog."default" NOT NULL,
-    salt text COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT users_pkey PRIMARY KEY (user_id),
+    CONSTRAINT users_pkey PRIMARY KEY (id),
     CONSTRAINT users_email_key UNIQUE (email)
 );
 
 ALTER TABLE IF EXISTS public.api_authentication
     ADD CONSTRAINT api_authentication_user_id_fkey FOREIGN KEY (user_id)
-    REFERENCES public.users (user_id) MATCH SIMPLE
+    REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.camera_command_logs
     ADD CONSTRAINT camera_command_logs_camera_id_fkey FOREIGN KEY (camera_id)
-    REFERENCES public.cameras (camera_id) MATCH SIMPLE
+    REFERENCES public.cameras (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -200,14 +212,14 @@ ALTER TABLE IF EXISTS public.camera_command_logs
 
 ALTER TABLE IF EXISTS public.camera_snaps
     ADD CONSTRAINT camera_snaps_camera_id_fkey FOREIGN KEY (camera_id)
-    REFERENCES public.cameras (camera_id) MATCH SIMPLE
+    REFERENCES public.cameras (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.cameras
     ADD CONSTRAINT cameras_room_id_fkey FOREIGN KEY (room_id)
-    REFERENCES public.rooms (room_id) MATCH SIMPLE
+    REFERENCES public.rooms (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -221,14 +233,14 @@ ALTER TABLE IF EXISTS public.general_command_logs
 
 ALTER TABLE IF EXISTS public.general_command_logs
     ADD CONSTRAINT general_command_logs_user_id_fkey FOREIGN KEY (executed_by_user_id)
-    REFERENCES public.users (user_id) MATCH SIMPLE
+    REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.rooms
     ADD CONSTRAINT rooms_user_id_fkey FOREIGN KEY (user_id)
-    REFERENCES public.users (user_id) MATCH SIMPLE
+    REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -242,21 +254,21 @@ ALTER TABLE IF EXISTS public.sensor_command_logs
 
 ALTER TABLE IF EXISTS public.sensor_command_logs
     ADD CONSTRAINT sensor_command_logs_sensor_id_fkey FOREIGN KEY (sensor_id)
-    REFERENCES public.sensors (sensor_id) MATCH SIMPLE
+    REFERENCES public.sensors (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.sensor_logs
     ADD CONSTRAINT sensor_logs_sensor_id_fkey FOREIGN KEY (sensor_id)
-    REFERENCES public.sensors (sensor_id) MATCH SIMPLE
+    REFERENCES public.sensors (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.sensors
     ADD CONSTRAINT sensors_room_id_fkey FOREIGN KEY (room_id)
-    REFERENCES public.rooms (room_id) MATCH SIMPLE
+    REFERENCES public.rooms (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -277,21 +289,21 @@ ALTER TABLE IF EXISTS public.switch_command_logs
 
 ALTER TABLE IF EXISTS public.switch_command_logs
     ADD CONSTRAINT switch_command_logs_switch_id_fkey FOREIGN KEY (switch_id)
-    REFERENCES public.switches (switch_id) MATCH SIMPLE
+    REFERENCES public.switches (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.switch_logs
     ADD CONSTRAINT switch_logs_switch_id_fkey FOREIGN KEY (switch_id)
-    REFERENCES public.switches (switch_id) MATCH SIMPLE
+    REFERENCES public.switches (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.switches
     ADD CONSTRAINT switches_room_id_fkey FOREIGN KEY (room_id)
-    REFERENCES public.rooms (room_id) MATCH SIMPLE
+    REFERENCES public.rooms (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
@@ -305,7 +317,7 @@ ALTER TABLE IF EXISTS public.switches_schedule
 
 ALTER TABLE IF EXISTS public.switches_schedule
     ADD CONSTRAINT switches_schedule_switch_id_fkey FOREIGN KEY (switch_id)
-    REFERENCES public.switches (switch_id) MATCH SIMPLE
+    REFERENCES public.switches (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 

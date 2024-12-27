@@ -19,9 +19,12 @@ type ApiAuthentication struct {
 }
 
 type Camera struct {
-	CameraID int32
-	Name     string
-	RoomID   int32
+	ID     int32
+	Name   string
+	RoomID int32
+	Value  string
+	Color  int64
+	Index  int32
 }
 
 type CameraCommand struct {
@@ -59,17 +62,20 @@ type GeneralCommandLog struct {
 }
 
 type Room struct {
-	RoomID int32
+	ID     int32
 	Name   string
 	UserID int32
 }
 
 type Sensor struct {
-	SensorID int32
-	Type     string
-	Name     string
-	RoomID   int32
-	TypeID   sql.NullInt32
+	ID     int32
+	Type   string
+	Name   string
+	RoomID int32
+	TypeID int32
+	Value  int32
+	Index  int32
+	Color  int64
 }
 
 type SensorCommand struct {
@@ -100,9 +106,16 @@ type SensorType struct {
 }
 
 type Switch struct {
-	SwitchID int32
-	Name     string
-	RoomID   int32
+	ID          int32
+	Name        string
+	RoomID      int32
+	SwitchState bool
+	Color       int64
+	IconCode    int32
+	IconFamily  string
+	Index       int32
+	Type        int32
+	Value       int16
 }
 
 type SwitchCommand struct {
@@ -136,11 +149,10 @@ type SwitchesSchedule struct {
 }
 
 type User struct {
-	UserID         int32
+	ID             int32
 	Username       string
 	Email          string
 	HashedPassword string
-	Salt           string
 	CreatedAt      sql.NullTime
 	UpdatedAt      sql.NullTime
 }

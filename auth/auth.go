@@ -15,7 +15,6 @@ import (
 	"github.com/DawoudTormos/Home_Control_System_Backend/db"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
 )
 
 var JwtKey []byte

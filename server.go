@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/DawoudTormos/Home_Control_System_Backend/api"
 	"github.com/DawoudTormos/Home_Control_System_Backend/auth"
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
 )
 
 func main() {
@@ -40,6 +42,10 @@ func main() {
 			username := c.GetString("username")
 			c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Welcome %s, here is your secure data.", username)})
 		})
+
+		protected.GET("/getRooms", api.GetRooms(dbConn))
+		protected.GET("/getDevices", api.GetDevices(dbConn))
+
 	}
 
 	server.Run(":8080")
