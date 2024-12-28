@@ -8,22 +8,82 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetRoomIndex(dbConn *sql.DB) gin.HandlerFunc {
+func SetIndexes(dbConn *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var devices []struct {
+			ID    int    `json:"Id"`
+			Type  string `json:"Type"`
+			Index int    `json:"Index"`
+		}
+
+		if err := c.ShouldBindJSON(&devices); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		print(devices)
 
 		ctx := c.Request.Context()
 		username := c.GetString("username")
 
 		queries := db.New(dbConn)
 
-		rooms, err := queries.SetRoomIndex(ctx, username)
+		for _, value := range devices {
+			if value.Type == "room" {
+				var parms db.SetRoomIndexParams
+				parms.ID = int32(value.ID)
+				parms.Index = int32(value.Index)
+				parms.Username = username
+				err := queries.SetRoomIndex(ctx, parms)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed change index in a room", "details": err.Error()})
+					return
+				}
+			}
 
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms", "details": err.Error()})
-			return
+			if value.Type == "switch" {
+				var parms db.SetSwitchIndexParams
+				parms.ID = int32(value.ID)
+				parms.Index = int32(value.Index)
+				parms.Username = username
+				err := queries.SetSwitchIndex(ctx, parms)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed change index in a room", "details": err.Error()})
+					return
+				}
+			}
+
+			if value.Type == "camera" {
+				var parms db.SetCameraIndexParams
+				parms.ID = int32(value.ID)
+				parms.Index = int32(value.Index)
+				parms.Username = username
+				err := queries.SetCameraIndex(ctx, parms)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed change index in a room", "details": err.Error()})
+					return
+				}
+			}
+
+			if value.Type == "sensor" {
+				var parms db.SetSensorIndexParams
+				parms.ID = int32(value.ID)
+				parms.Index = int32(value.Index)
+				parms.Username = username
+				err := queries.SetSensorIndex(ctx, parms)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed change index in a room", "details": err.Error()})
+					return
+				}
+			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{"rooms": rooms})
+		/*if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms", "details": err.Error()})
+			return
+		}*/
+
+		c.JSON(http.StatusOK, gin.H{"result": "success"})
 
 	}
 }
