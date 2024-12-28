@@ -9,18 +9,18 @@ import (
 	"context"
 )
 
-const setRoomIndex = `-- name: setRoomIndex :exec
+const setRoomIndex = `-- name: SetRoomIndex :exec
 update rooms
 set index = $1
 where id = $2
 `
 
-type setRoomIndexParams struct {
+type SetRoomIndexParams struct {
 	Index int32
 	ID    int32
 }
 
-func (q *Queries) setRoomIndex(ctx context.Context, arg setRoomIndexParams) error {
+func (q *Queries) SetRoomIndex(ctx context.Context, arg SetRoomIndexParams) error {
 	_, err := q.db.ExecContext(ctx, setRoomIndex, arg.Index, arg.ID)
 	return err
 }

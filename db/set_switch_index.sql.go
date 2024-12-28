@@ -9,18 +9,18 @@ import (
 	"context"
 )
 
-const setSwitchIndex = `-- name: setSwitchIndex :exec
+const setSwitchIndex = `-- name: SetSwitchIndex :exec
 update switches
 set index = $1
 where id = $2
 `
 
-type setSwitchIndexParams struct {
+type SetSwitchIndexParams struct {
 	Index int32
 	ID    int32
 }
 
-func (q *Queries) setSwitchIndex(ctx context.Context, arg setSwitchIndexParams) error {
+func (q *Queries) SetSwitchIndex(ctx context.Context, arg SetSwitchIndexParams) error {
 	_, err := q.db.ExecContext(ctx, setSwitchIndex, arg.Index, arg.ID)
 	return err
 }

@@ -9,18 +9,18 @@ import (
 	"context"
 )
 
-const setCameraIndex = `-- name: setCameraIndex :exec
+const setCameraIndex = `-- name: SetCameraIndex :exec
 update cameras
 set index = $1
 where id = $2
 `
 
-type setCameraIndexParams struct {
+type SetCameraIndexParams struct {
 	Index int32
 	ID    int32
 }
 
-func (q *Queries) setCameraIndex(ctx context.Context, arg setCameraIndexParams) error {
+func (q *Queries) SetCameraIndex(ctx context.Context, arg SetCameraIndexParams) error {
 	_, err := q.db.ExecContext(ctx, setCameraIndex, arg.Index, arg.ID)
 	return err
 }

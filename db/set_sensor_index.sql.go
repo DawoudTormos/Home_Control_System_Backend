@@ -9,18 +9,18 @@ import (
 	"context"
 )
 
-const setSensorIndex = `-- name: setSensorIndex :exec
+const setSensorIndex = `-- name: SetSensorIndex :exec
 update sensors
 set index = $1
 where id = $2
 `
 
-type setSensorIndexParams struct {
+type SetSensorIndexParams struct {
 	Index int32
 	ID    int32
 }
 
-func (q *Queries) setSensorIndex(ctx context.Context, arg setSensorIndexParams) error {
+func (q *Queries) SetSensorIndex(ctx context.Context, arg SetSensorIndexParams) error {
 	_, err := q.db.ExecContext(ctx, setSensorIndex, arg.Index, arg.ID)
 	return err
 }
