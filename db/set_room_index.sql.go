@@ -10,17 +10,23 @@ import (
 )
 
 const setRoomIndex = `-- name: SetRoomIndex :exec
-update rooms
-set index = $1
-where id = $2
+UPDATE rooms
+SET index = $1
+WHERE rooms.id = $2 
+  AND user_id IN (
+    SELECT users.id 
+    FROM users 
+    WHERE users.username = $3
+  )
 `
 
 type SetRoomIndexParams struct {
-	Index int32
-	ID    int32
+	Index    int32
+	ID       int32
+	Username string
 }
 
 func (q *Queries) SetRoomIndex(ctx context.Context, arg SetRoomIndexParams) error {
-	_, err := q.db.ExecContext(ctx, setRoomIndex, arg.Index, arg.ID)
+	_, err := q.db.ExecContext(ctx, setRoomIndex, arg.Index, arg.ID, arg.Username)
 	return err
 }

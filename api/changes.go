@@ -16,7 +16,7 @@ func SetRoomIndex(dbConn *sql.DB) gin.HandlerFunc {
 
 		queries := db.New(dbConn)
 
-		rooms, err := queries. (ctx, username)
+		rooms, err := queries.SetRoomIndex(ctx, username)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms", "details": err.Error()})

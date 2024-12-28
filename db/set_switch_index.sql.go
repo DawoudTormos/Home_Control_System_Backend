@@ -10,17 +10,27 @@ import (
 )
 
 const setSwitchIndex = `-- name: SetSwitchIndex :exec
-update switches
-set index = $1
-where id = $2
+UPDATE switches
+SET index = $1
+WHERE switches.id = $2 
+  AND room_id IN  (
+    SELECT rooms.id 
+    FROM rooms 
+    WHERE rooms.user_id  IN  (
+            SELECT users.id 
+            FROM users 
+            WHERE users.username = $3
+        )
+  )
 `
 
 type SetSwitchIndexParams struct {
-	Index int32
-	ID    int32
+	Index    int32
+	ID       int32
+	Username string
 }
 
 func (q *Queries) SetSwitchIndex(ctx context.Context, arg SetSwitchIndexParams) error {
-	_, err := q.db.ExecContext(ctx, setSwitchIndex, arg.Index, arg.ID)
+	_, err := q.db.ExecContext(ctx, setSwitchIndex, arg.Index, arg.ID, arg.Username)
 	return err
 }
