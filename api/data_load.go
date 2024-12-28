@@ -8,7 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Device interface{}
+type Device interface {
+}
 
 func GetRooms(dbConn *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -56,22 +57,22 @@ func GetDevices(dbConn *sql.DB) gin.HandlerFunc {
 
 			if switches != nil {
 				for _, value := range switches {
-
-					devices = append(devices, value)
+					value2 := toMapSwitch(value)
+					devices = append(devices, value2)
 				}
 			}
 
 			if sensors != nil {
 				for _, value := range sensors {
-
-					devices = append(devices, value)
+					value2 := toMapSensor(value)
+					devices = append(devices, value2)
 				}
 			}
 
 			if cameras != nil {
 				for _, value := range cameras {
-
-					devices = append(devices, value)
+					value2 := toMapCamera(value)
+					devices = append(devices, value2)
 				}
 			}
 
@@ -82,5 +83,42 @@ func GetDevices(dbConn *sql.DB) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, devicesByRoom)
 
+	}
+}
+
+func toMapSwitch(row db.GetswitchesByRoomRow) map[string]interface{} {
+	return map[string]interface{}{
+		"ID":         row.ID,
+		"Name":       row.Name,
+		"Color":      row.Color,
+		"IconCode":   row.IconCode,
+		"IconFamily": row.IconFamily,
+		"Type":       row.Type,
+		"Value":      row.Value,
+		"Index":      row.Index,
+		"SType":      "switch",
+	}
+}
+
+func toMapCamera(row db.GetcamerasByRoomRow) map[string]interface{} {
+	return map[string]interface{}{
+		"ID":    row.ID,
+		"Name":  row.Name,
+		"Color": row.Color,
+		"Value": row.Value,
+		"Index": row.Index,
+		"SType": "camera",
+	}
+}
+
+func toMapSensor(row db.GetsensorsByRoomRow) map[string]interface{} {
+	return map[string]interface{}{
+		"ID":    row.ID,
+		"Name":  row.Name,
+		"Color": row.Color,
+		"Type":  row.Type,
+		"Value": row.Value,
+		"Index": row.Index,
+		"SType": "sensor",
 	}
 }
