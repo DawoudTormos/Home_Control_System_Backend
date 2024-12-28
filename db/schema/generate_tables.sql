@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS public.rooms
     id integer NOT NULL DEFAULT nextval('rooms_room_id_seq'::regclass),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     user_id integer NOT NULL,
+    index integer NOT NULL DEFAULT 0,
     CONSTRAINT rooms_pkey PRIMARY KEY (id)
 );
 
@@ -156,7 +157,6 @@ CREATE TABLE IF NOT EXISTS public.switches
     id integer NOT NULL DEFAULT nextval('switches_switch_id_seq'::regclass),
     name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     room_id integer NOT NULL,
-    switch_state boolean NOT NULL,
     color bigint NOT NULL,
     icon_code integer NOT NULL,
     icon_family character varying COLLATE pg_catalog."default" NOT NULL,

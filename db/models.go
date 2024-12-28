@@ -65,6 +65,7 @@ type Room struct {
 	ID     int32
 	Name   string
 	UserID int32
+	Index  int32
 }
 
 type Sensor struct {
@@ -106,16 +107,15 @@ type SensorType struct {
 }
 
 type Switch struct {
-	ID          int32
-	Name        string
-	RoomID      int32
-	SwitchState bool
-	Color       int64
-	IconCode    int32
-	IconFamily  string
-	Index       int32
-	Type        int32
-	Value       int16
+	ID         int32
+	Name       string
+	RoomID     int32
+	Color      int64
+	IconCode   int32
+	IconFamily string
+	Index      int32
+	Type       int32
+	Value      int16
 }
 
 type SwitchCommand struct {
