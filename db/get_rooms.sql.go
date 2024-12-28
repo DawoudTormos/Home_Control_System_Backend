@@ -10,7 +10,7 @@ import (
 )
 
 const getRooms = `-- name: GetRooms :many
-SELECT rooms.id, rooms.name 
+SELECT rooms.id, rooms.name , rooms.index 
 FROM rooms
 JOIN users
 ON users.id = rooms.user_id
@@ -18,8 +18,9 @@ WHERE users.username = $1
 `
 
 type GetRoomsRow struct {
-	ID   int32
-	Name string
+	ID    int32
+	Name  string
+	Index int32
 }
 
 func (q *Queries) GetRooms(ctx context.Context, username string) ([]GetRoomsRow, error) {
@@ -31,7 +32,7 @@ func (q *Queries) GetRooms(ctx context.Context, username string) ([]GetRoomsRow,
 	var items []GetRoomsRow
 	for rows.Next() {
 		var i GetRoomsRow
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Index); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

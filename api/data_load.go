@@ -26,7 +26,7 @@ func GetRooms(dbConn *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"rooms": rooms})
+		c.JSON(http.StatusOK, rooms)
 
 	}
 }
@@ -50,6 +50,7 @@ func GetDevices(dbConn *sql.DB) gin.HandlerFunc {
 		devicesByRoom := make(map[string][]Device)
 
 		for _, value := range rooms {
+			devices = []Device{}
 			//fmt.Printf("Index: %d, Value: %d\n", index, value)
 			switches, _ := queries.GetswitchesByRoom(ctx, value.ID)
 			sensors, _ := queries.GetsensorsByRoom(ctx, value.ID)
