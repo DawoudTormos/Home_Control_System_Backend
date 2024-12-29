@@ -47,6 +47,7 @@ func main() {
 		protected.GET("/getDevices", api.GetDevices(dbConn))
 		protected.POST("/setIndexes", api.SetIndexes(dbConn))
 		protected.POST("/setSwitchValue", api.SetSwitchValue(dbConn))
+		protected.POST("/addRoom", api.AddRoom(dbConn))
 
 	}
 

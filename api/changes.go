@@ -172,7 +172,40 @@ func SetSwitchValue(dbConn *sql.DB) gin.HandlerFunc {
 		err := queries.SetSwitchValue(ctx, parms)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error in updating the switch's value."})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error in db in updating the switch's value."})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"result": "success"})
+
+	}
+}
+
+func AddRoom(dbConn *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var room struct {
+			Name string `json:"name"`
+		}
+
+		if err := c.ShouldBindJSON(&room); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		ctx := c.Request.Context()
+		username := c.GetString("username")
+
+		queries := db.New(dbConn)
+
+		var parms db.AddRoomParams
+
+		parms.Name = room.Name
+		parms.Username = username
+
+		err := queries.AddRoom(ctx, parms)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error in db in add a new room."})
 			return
 		}
 
