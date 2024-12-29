@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/DawoudTormos/Home_Control_System_Backend/db"
+	ginmethods "github.com/DawoudTormos/Home_Control_System_Backend/ginMethods"
 	"github.com/gin-gonic/gin"
 )
 
@@ -139,6 +140,43 @@ func GetDevicess(dbConn *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, devicesByRoom)
+
+	}
+}
+
+func SetSwitchValue(dbConn *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var device struct {
+			ID    int `json:"Id"`
+			Value int `json:"Value"`
+		}
+
+		if err := c.ShouldBindJSON(&device); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		ctx := c.Request.Context()
+		username := c.GetString("username")
+
+		queries := db.New(dbConn)
+
+		var parms db.SetSwitchValueParams
+
+		parms.ID = int32(device.ID)
+		parms.Value = int16(device.Value)
+		parms.Username = username
+		ginmethods.ReadAndPrintBody(c)
+		print(parms.Value, "\n")
+
+		err := queries.SetSwitchValue(ctx, parms)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error in updating the switch's value."})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"result": "success"})
 
 	}
 }
