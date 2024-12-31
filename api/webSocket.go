@@ -16,13 +16,31 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type ClientManager struct {
+type ClientManagerDeviceLinking struct {
 	mu      sync.Mutex
-	clients map[string]*websocket.Conn
+	clients map[string]DeviceLinking
 }
 
-var clientManager = ClientManager{
-	clients: make(map[string]*websocket.Conn),
+type ClientManagerDataUpdate struct {
+	mu      sync.Mutex
+	clients map[string]DataUpdate
+}
+
+type DeviceLinking struct {
+	deviceID int32
+	conn     *websocket.Conn
+}
+
+type DataUpdate struct {
+	conn *websocket.Conn
+}
+
+var clientManagerDeviceLinking = ClientManagerDeviceLinking{
+	clients: make(map[string]DeviceLinking),
+}
+
+var clientManagerDataUpdate = ClientManagerDataUpdate{
+	clients: make(map[string]DataUpdate),
 }
 
 func HandleWebSocket(c *gin.Context) {
@@ -32,11 +50,11 @@ func HandleWebSocket(c *gin.Context) {
 		return
 	}
 
-	/*purpose := c.Query("purpose")
+	purpose := c.Query("purpose")
 	if purpose == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Purpose is missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Purpose is missing."})
 		return
-	}*/
+	}
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -45,47 +63,95 @@ func HandleWebSocket(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	clientManager.mu.Lock()
-	clientManager.clients[username] = conn
-	clientManager.mu.Unlock()
+	if purpose == "device_linking" {
 
-	for {
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("Read error:", err)
-			break
-		}
-		log.Printf("Received: %s", message)
-		if bytes.Equal(message, []byte("exit")) {
-			break
-		} else if bytes.Equal(message, []byte("update")) {
+		var d DeviceLinking
+		d.conn = conn
+		d.deviceID = 0
+		clientManagerDeviceLinking.mu.Lock()
+		clientManagerDeviceLinking.clients[username] = d
+		clientManagerDeviceLinking.mu.Unlock()
 
+		for {
+
+			clientManagerDeviceLinking.mu.Lock()
+			_, message, err := clientManagerDeviceLinking.clients[username].conn.ReadMessage()
+			if err != nil {
+				log.Println("Read error:", err)
+				break
+			}
+			log.Printf("Received: %s", message)
+
+			if bytes.Equal(message, []byte("exit")) {
+				break
+			} else if bytes.Equal(message, []byte("update")) {
+
+			}
+
+			err = clientManagerDeviceLinking.clients[username].conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Println("Write error:", err)
+				break
+			}
+			clientManagerDeviceLinking.mu.Unlock()
 		}
 
-		err = conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			log.Println("Write error:", err)
-			break
+		clientManagerDeviceLinking.mu.Lock()
+		delete(clientManagerDeviceLinking.clients, username)
+		clientManagerDeviceLinking.mu.Unlock()
+
+	} else if purpose == "data_update" {
+
+		var d DataUpdate
+		d.conn = conn
+		clientManagerDataUpdate.mu.Lock()
+		clientManagerDataUpdate.clients[username] = d
+		clientManagerDataUpdate.mu.Unlock()
+
+		for {
+			_, message, err := clientManagerDataUpdate.clients[username].conn.ReadMessage()
+			if err != nil {
+				log.Println("Read error:", err)
+				break
+			}
+			log.Printf("Received: %s", message)
+
+			if bytes.Equal(message, []byte("exit")) {
+				break
+			} else if bytes.Equal(message, []byte("update")) {
+
+			}
+
+			err = clientManagerDataUpdate.clients[username].conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Println("Write error:", err)
+				break
+			}
 		}
+
+		clientManagerDataUpdate.mu.Lock()
+		delete(clientManagerDataUpdate.clients, username)
+		clientManagerDataUpdate.mu.Unlock()
+
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid purpose"})
+		return
 	}
 
-	clientManager.mu.Lock()
-	delete(clientManager.clients, username)
-	clientManager.mu.Unlock()
 }
 
 // Function to send a message to a specific client based on username
 func sendMessageToClient(username, message string) {
-	clientManager.mu.Lock()
-	defer clientManager.mu.Unlock()
+	clientManagerDataUpdate.mu.Lock()
+	defer clientManagerDataUpdate.mu.Unlock()
 
-	conn, exists := clientManager.clients[username]
-	if exists {
+	conn := clientManagerDataUpdate.clients[username].conn
+	if conn != nil {
 		err := conn.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
 			log.Println("Write error:", err)
 			conn.Close()
-			delete(clientManager.clients, username)
+			delete(clientManagerDataUpdate.clients, username)
 		}
 	}
 }
