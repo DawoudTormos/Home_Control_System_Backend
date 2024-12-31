@@ -48,7 +48,7 @@ func main() {
 		protected.POST("/setIndexes", api.SetIndexes(dbConn))
 		protected.POST("/setSwitchValue", api.SetSwitchValue(dbConn))
 		protected.POST("/addRoom", api.AddRoom(dbConn))
-
+		protected.GET("/ws", api.HandleWebSocket)
 	}
 
 	server.Run(":8080")
