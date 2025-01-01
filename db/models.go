@@ -25,6 +25,7 @@ type Camera struct {
 	Value  string
 	Color  int64
 	Index  int32
+	Token  sql.NullString
 }
 
 type CameraCommand struct {
@@ -77,6 +78,7 @@ type Sensor struct {
 	Value  int32
 	Index  int32
 	Color  int64
+	Token  sql.NullString
 }
 
 type SensorCommand struct {
@@ -116,6 +118,7 @@ type Switch struct {
 	Index      int32
 	Type       int32
 	Value      int16
+	Token      sql.NullString
 }
 
 type SwitchCommand struct {

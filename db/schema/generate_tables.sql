@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS public.cameras
     value character varying COLLATE pg_catalog."default" NOT NULL,
     color bigint NOT NULL,
     index integer NOT NULL,
+    token character varying(66) COLLATE pg_catalog."default",
     CONSTRAINT cameras_pkey PRIMARY KEY (id)
 );
 
@@ -122,6 +123,7 @@ CREATE TABLE IF NOT EXISTS public.sensors
     value integer NOT NULL,
     index integer NOT NULL,
     color bigint NOT NULL,
+    token character varying(66) COLLATE pg_catalog."default",
     CONSTRAINT sensors_pkey PRIMARY KEY (id)
 );
 
@@ -163,6 +165,7 @@ CREATE TABLE IF NOT EXISTS public.switches
     index integer NOT NULL,
     type integer NOT NULL,
     value smallint NOT NULL,
+    token character varying(66) COLLATE pg_catalog."default",
     CONSTRAINT switches_pkey PRIMARY KEY (id)
 );
 

@@ -23,7 +23,7 @@ func main() {
 	defer dbConn.Close()
 
 	auth.LoadJwtKey()
-
+	api.StartPeriodicCheck()
 	server := gin.Default()
 
 	// Login route for generating tokens
@@ -33,7 +33,7 @@ func main() {
 	server.POST("/signup", auth.SignUp(dbConn))
 
 	// Check token validity
-	server.POST("/check-token", auth.TokenAuthMiddleware(), auth.NewToken())
+	server.POST("/checkToken", auth.TokenAuthMiddleware(), auth.NewToken())
 
 	// Protected route
 	protected := server.Group("/secure", auth.TokenAuthMiddleware())
@@ -49,9 +49,12 @@ func main() {
 		protected.POST("/setSwitchValue", api.SetSwitchValue(dbConn))
 		protected.POST("/addRoom", api.AddRoom(dbConn))
 		protected.POST("/checkDeviceExists", api.CheckDeviceExists(dbConn))
+		protected.POST("/deviceLinkRequest", api.CheckDeviceExistsAndStartLinking(dbConn))
 
 		protected.GET("/ws", api.HandleWebSocket)
 	}
+
+	server.POST("/acceptLink", api.AcceptDeviceLinking(dbConn))
 
 	server.Run(":8080")
 }
