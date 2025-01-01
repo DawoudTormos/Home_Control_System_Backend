@@ -10,7 +10,7 @@ import (
 )
 
 const getsensorsByRoom = `-- name: GetsensorsByRoom :many
-SELECT id, name, color, type, value ,index
+SELECT id, name, color, type_id as type, value ,index
 FROM sensors
 WHERE room_id = $1
 `
@@ -19,7 +19,7 @@ type GetsensorsByRoomRow struct {
 	ID    int32
 	Name  string
 	Color int64
-	Type  string
+	Type  int32
 	Value int32
 	Index int32
 }
