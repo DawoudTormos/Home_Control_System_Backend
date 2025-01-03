@@ -11,6 +11,8 @@ import (
 )
 
 type linkRequest struct {
+	ReqID     int32
+	Username  string
 	RoomID    int32
 	DeviceID  int32
 	Name      string
@@ -64,6 +66,7 @@ func CheckDeviceExists(dbConn *sql.DB) gin.HandlerFunc {
 			return
 		} else if result.ID == 0 {
 			c.JSON(http.StatusOK, gin.H{"error": "Device does not exist."})
+			return
 		}
 
 		c.JSON(http.StatusOK, result)
@@ -89,7 +92,7 @@ func CheckDeviceExistsAndStartLinking(dbConn *sql.DB) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
-		//username := c.GetString("username")
+		username := c.GetString("username")
 
 		queries := db.New(dbConn)
 
@@ -103,6 +106,8 @@ func CheckDeviceExistsAndStartLinking(dbConn *sql.DB) gin.HandlerFunc {
 		}
 
 		req := linkRequest{
+			ReqID:     int32(len(linkingRequests)),
+			Username:  username,
 			RoomID:    int32(device.RoomID),
 			DeviceID:  int32(result.ID),
 			Name:      device.DeviceName,
@@ -120,7 +125,57 @@ func CheckDeviceExistsAndStartLinking(dbConn *sql.DB) gin.HandlerFunc {
 		linkingRequests = append(linkingRequests, req)
 		requestsMutex.Unlock()
 
-		c.JSON(http.StatusOK, result)
+		response := map[string]interface{}{
+			"device": result,
+			"ReqID":  req.ReqID,
+		}
+
+		c.JSON(http.StatusOK, response)
+
+	}
+}
+
+func CheckDeviceRequestState(dbConn *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var check struct {
+			ReqID int32 `json:"reqID"`
+		}
+
+		if err := c.ShouldBindJSON(&check); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		//ctx := c.Request.Context()
+		username := c.GetString("username")
+
+		var isFound bool = false
+		var status bool = false
+
+		requestsMutex.Lock()
+		for i, req := range linkingRequests {
+			print(i, "\n")
+			//i++
+			if check.ReqID == req.ReqID && req.Username == username {
+				print(req.DeviceID, " device id: found\n")
+				status = req.Status
+				isFound = true
+				break
+			}
+
+		}
+		requestsMutex.Unlock()
+
+		if !isFound {
+			c.JSON(http.StatusOK, gin.H{"error": "Request not found."})
+			return
+		} else if !status {
+			c.JSON(http.StatusOK, gin.H{"error": "none", "status": "pending"})
+			return
+		} else if status {
+			c.JSON(http.StatusOK, gin.H{"error": "none", "status": "success"})
+			return
+		}
 
 	}
 }
@@ -152,7 +207,7 @@ func AcceptDeviceLinking(dbConn *sql.DB) gin.HandlerFunc {
 		for i, req := range linkingRequests {
 			print(i, "\n")
 			//i++
-			if device.ID == req.DeviceID {
+			if device.ID == req.DeviceID && !req.Status {
 				print(req.DeviceID, " device id: found\n")
 				request = req
 				indexFound = i
@@ -193,10 +248,6 @@ func AcceptDeviceLinking(dbConn *sql.DB) gin.HandlerFunc {
 
 			}
 
-			linkingRequests = append(linkingRequests[:indexFound], linkingRequests[indexFound+1:]...)
-
-			c.JSON(http.StatusOK, gin.H{"result": "success"})
-
 		} else if device.DeviceType == "sensor" {
 
 			var linkedDevice = db.LinkSensorParams{
@@ -218,10 +269,6 @@ func AcceptDeviceLinking(dbConn *sql.DB) gin.HandlerFunc {
 				return
 
 			}
-
-			linkingRequests = append(linkingRequests[:indexFound], linkingRequests[indexFound+1:]...)
-
-			c.JSON(http.StatusOK, gin.H{"result": "success"})
 
 		} else if device.DeviceType == "camera" {
 
@@ -245,10 +292,16 @@ func AcceptDeviceLinking(dbConn *sql.DB) gin.HandlerFunc {
 
 			}
 
-			linkingRequests = append(linkingRequests[:indexFound], linkingRequests[indexFound+1:]...)
-
-			c.JSON(http.StatusOK, gin.H{"result": "success"})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"error": "invalid device or bad request."})
+			return
 
 		}
+
+		requestsMutex.Lock()
+		linkingRequests[indexFound].Status = true
+		requestsMutex.Unlock()
+
+		c.JSON(http.StatusOK, gin.H{"result": "success"})
 	}
 }

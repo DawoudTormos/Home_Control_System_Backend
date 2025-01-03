@@ -50,6 +50,7 @@ func main() {
 		protected.POST("/addRoom", api.AddRoom(dbConn))
 		protected.POST("/checkDeviceExists", api.CheckDeviceExists(dbConn))
 		protected.POST("/deviceLinkRequest", api.CheckDeviceExistsAndStartLinking(dbConn))
+		protected.POST("/deviceLinkRequestState", api.CheckDeviceRequestState(dbConn))
 
 		protected.GET("/ws", api.HandleWebSocket)
 	}
