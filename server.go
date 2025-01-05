@@ -33,7 +33,7 @@ func main() {
 	server.POST("/signup", auth.SignUp(dbConn))
 
 	// Check token validity
-	server.POST("/checkToken", auth.TokenAuthMiddleware(), auth.NewToken())
+	server.POST("/checkToken", auth.TokenAuthMiddleware(), auth.NewToken(dbConn))
 
 	// Protected route
 	protected := server.Group("/secure", auth.TokenAuthMiddleware())

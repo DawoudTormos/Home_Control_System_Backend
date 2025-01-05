@@ -246,7 +246,7 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func NewToken() gin.HandlerFunc { // Issue a new token with an extended expiration time
+func NewToken(dbConn *sql.DB) gin.HandlerFunc { // Issue a new token with an extended expiration time
 	return func(c *gin.Context) {
 		username := c.GetString("username")
 
@@ -256,10 +256,24 @@ func NewToken() gin.HandlerFunc { // Issue a new token with an extended expirati
 			return
 		}
 
+		ctx := c.Request.Context()
+
+		queries := db.New(dbConn)
+
+		email, err := queries.GetEmail(ctx, username)
+		if err != nil {
+			println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"Error": "error getting email from db",
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"message":   "Token is valid",
 			"new_token": newToken,
 			"username":  username,
+			"email":     email,
 		})
 
 	}
