@@ -35,13 +35,13 @@ func main() {
 	// Check token validity
 	server.POST("/checkToken", auth.TokenAuthMiddleware(), auth.NewToken(dbConn))
 
+	server.GET("/data", func(c *gin.Context) { // Test route
+		username := c.GetString("username")
+		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Welcome %s, here is your data.", username)})
+	})
 	// Protected route
 	protected := server.Group("/secure", auth.TokenAuthMiddleware())
 	{
-		protected.GET("/data", func(c *gin.Context) {
-			username := c.GetString("username")
-			c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Welcome %s, here is your secure data.", username)})
-		})
 
 		protected.GET("/getRooms", api.GetRooms(dbConn))
 		protected.GET("/getDevices", api.GetDevices(dbConn))
@@ -56,6 +56,8 @@ func main() {
 	}
 
 	server.POST("/acceptLink", api.AcceptDeviceLinking(dbConn))
+	server.Any("/sendSensorData", api.SendSensorData(dbConn))
+	server.Any("/getSwitchStatus", api.GetSwitchStatus(dbConn))
 
-	server.Run(":8080")
+	server.Run("0.0.0.0:8080")
 }
